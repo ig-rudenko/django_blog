@@ -6,7 +6,7 @@
     {% load humanize %}
 
     <h1>{{ profile.user.username }}</h1>
-    <h2>{{ profile.phone }} | {{ profile.address }}</h2>
+    <h2>{{ profile.phone|default_if_none:'' }} | {{ profile.address|default_if_none:'' }}</h2>
 
     <hr>
 <div class="row row-cols-3 row-cols-md-3 g-4">

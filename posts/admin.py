@@ -3,19 +3,20 @@ from .models import Post, Profile, Log
 from django.utils.html import mark_safe
 
 from django.contrib.auth.models import User
+from .paginator import LargeTablePaginator
 
 
 @admin.register(Post)
 class PostsAdmin(admin.ModelAdmin):
     list_display = ('title', 'date', 'user', 'user_info', 'link')
     fieldsets = (
-        ('Заголовок и дата', {"fields": ("title", "date")}),
+        ('Заголовок и дата', {"fields": ("title",)}),
         ('Содержимое', {"fields": ("content", 'user')})
     )
     ordering = ('-date',)
     search_fields = ('date', 'title')
-
     list_filter = ('user',)
+    paginator = LargeTablePaginator
 
     def get_queryset(self, request):
         if len(request.GET) == 0:
@@ -68,3 +69,5 @@ class ProfileAdmin(admin.ModelAdmin):
 @admin.register(Log)
 class LogAdmin(admin.ModelAdmin):
     list_display = ('obj', 'message', 'datetime')
+    search_fields = ('datetime', 'message')
+    list_filter = ('obj',)

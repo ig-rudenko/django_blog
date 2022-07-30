@@ -7,10 +7,20 @@
 <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
 <script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_ul }}
-        <input type="submit" value="ОК">
-    </form>
+{% if form.errors %}
+    {% for k, v in form.errors.items %}
+    <div class="alert alert-danger" role="alert">{{ k }}: {{ v }}</div>
+    {% endfor %}
+{% endif %}
+
+{% block delete %}
+
+{% endblock %}
+
+<form class="form-text" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input class="btn-primary btn" type="submit" value="ОК">
+</form>
 
 {% endblock %}

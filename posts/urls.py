@@ -1,15 +1,17 @@
 from django.urls import path
 from posts import views as posts_views
 
+# POSTS
+# /posts/
 
 urlpatterns = [
-    path('', posts_views.show_posts, name='show_posts'),
+    path('', posts_views.PostShowView.as_view(), name='show_posts'),
 
-    path('create', posts_views.create_post, name='create_post'),
+    path('create', posts_views.PostCreateView.as_view(), name='create_post'),
 
-    path('update/<int:post_id>', posts_views.update_post, name='update'),
+    path('update/<int:pk>', posts_views.PostUpdateView.as_view(), name='update'),
 
-    path('delete/<int:post_id>', posts_views.delete, name='delete'),
+    path('delete/<int:pk>', posts_views.PostDeleteView.as_view(), name='delete'),
 
     path('<int:post_id>', posts_views.post, name='get_post'),
 

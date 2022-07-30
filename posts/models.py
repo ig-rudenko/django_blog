@@ -1,10 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.urls import reverse
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from faker import Faker
 from ckeditor.fields import RichTextField
+import os
 
 # Create your models here.
 
@@ -24,10 +26,28 @@ class Post(models.Model):
                 fields=['date']
             )
         ]
-        ordering = ['date']
+        ordering = ['-date']
+
+    def get_absolute_url(self):
+        return reverse('get_post', kwargs={'post_id': self.pk})
 
     def __str__(self):
         return 'Post: ' + self.title
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        try:
+            img = Post.objects.get(id=self.id).image
+            if img and not self.image or img and self.image.path != img.path:
+                # Удаляем предыдущий файл картинки
+                print('Удаляем старую картинку')
+                if os.path.exists(img.path):
+                    os.remove(img.path)
+        except Post.DoesNotExist:
+            pass
+
+        return super(Post, self).save(
+            force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields
+        )
 
 
 class Profile(models.Model):
@@ -36,36 +56,23 @@ class Profile(models.Model):
     address = models.CharField(max_length=100, null=True)
     hobby = models.CharField(max_length=200, null=True)
 
+    class Meta:
+        db_table = 'auth_user_profile'
+
 
 class Log(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
     obj = models.CharField('model', max_length=10)
     message = models.CharField(max_length=300)
 
-
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        print('created', instance)
-        f = Faker('ru_RU')
-        Profile.objects.create(
-            user=instance,
-            phone=f.phone_number(),
-            address=f.address()
-        )
-
-#
-# @receiver([post_save], sender=User)
-# def user_log(sender, instance: User, created, **kwargs):
-#     Log.objects.create(
-#         obj=sender,
-#         message=f'{instance.username} saved: {created}, with: {kwargs}'
-#     )
+    class Meta:
+        db_table = 'posts_logs'
+        indexes = [
+            models.Index(fields=['datetime'], name='datetime_index')
+        ]
 
 
-# @receiver(post_delete, sender=User)
-# def delete_user(sender, instance, **kwargs):
-#     Log.objects.create(
-#         obj=str(type(sender))[:10],
-#         message=f'{instance.username} has been deleted | {kwargs}'
-#     )
+@receiver([post_save], sender=Post)
+def user_log(sender, instance: Post, created, **kwargs):
+    print('POST SAVE!', kwargs)
+    Log.objects.create(obj=str(instance)[:10], message=str(kwargs)[:300])

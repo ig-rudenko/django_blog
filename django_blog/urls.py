@@ -21,17 +21,21 @@ import debug_toolbar
 from django.contrib.staticfiles.utils import settings
 from django.contrib.staticfiles.urls import static
 
+# MAIN
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Для POSTS
-    path('', posts_views.show_posts, name='home'),
+    path('', posts_views.PostShowView.as_view(), name='home'),
+
     path('posts/', include('posts.urls')),
+
+    path('api/', include('posts.api.urls')),
 
     # Авторизация
     path('accounts/', include('django.contrib.auth.urls')),
 
     path('__debug__/', include(debug_toolbar.urls)),
     path('ckeditor/', include('ckeditor_uploader.urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
