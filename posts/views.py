@@ -2,17 +2,17 @@ import datetime
 from faker import Faker
 
 from django.shortcuts import render, redirect
-from django.http import HttpResponseNotAllowed, HttpResponseNotFound, Http404
+from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 
-from posts.api.serializers import PostsModelSerializer
 from .forms import PostModelForm
 from .paginator import LargeTablePaginator
+from .api.serializers import PostsModelSerializer
 from posts import models
 
 from rest_framework.decorators import api_view

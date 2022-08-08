@@ -12,6 +12,7 @@ from rest_framework import status
 from posts.api.serializers import *
 from posts.paginator import LargeTablePaginatorAPI
 from posts import models
+from rest_framework.authentication import TokenAuthentication
 
 
 #################################################
@@ -32,10 +33,10 @@ class ProfileListCreateAPIView(generics.ListCreateAPIView):
 #################################################
 #                     USERS                     #
 
-class UserListAPIView(generics.ListCreateAPIView):
+class UserListCreateAPIView(generics.ListCreateAPIView):
     """Просмотр всех пользователей и создание нового"""
 
-    permission_classes = [UserViewCreatePermission]
+    permission_classes = [permissions.IsAdminUser]
     queryset = models.User.objects.all()
 
     def get_serializer_class(self):
@@ -81,6 +82,7 @@ class PostViewAPIView(generics.ListCreateAPIView):
     serializer_class = PostsModelSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = LargeTablePaginatorAPI
+    # authentication_classes = [TokenAuthentication]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

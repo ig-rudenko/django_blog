@@ -19,5 +19,3 @@ class PostModelForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': CKEditorWidget(attrs={'class': 'form-control'})
         }
-
-

@@ -17,40 +17,6 @@ __all__ = [
 ]
 
 
-#############################################
-#                  POSTS                    #
-
-class PostsModelSerializer(serializers.ModelSerializer):
-    """Для вывода всех постов и создания новых"""
-    user = serializers.ReadOnlyField(source='user.username')
-    url = serializers.ReadOnlyField(source='get_absolute_url')
-
-    class Meta:
-        model = Post
-        fields = ('id', 'date', 'user', 'url', 'title', 'content', 'image')
-        read_only_fields = ('date',)
-
-
-class PostDetailModelSerializer(PostsModelSerializer):
-    """Для взаимодействия с уже существующими постами"""
-    title = serializers.CharField(required=False)
-    content = serializers.CharField(required=False)
-
-    class Meta:
-        model = Post
-        fields = ('id', 'date', 'user', 'url', 'title', 'content', 'image')
-        read_only_fields = ('date',)
-
-    def save(self, **kwargs):
-        validated_data = {**self.validated_data, **kwargs}
-        update_fields = []
-        for field, value in validated_data.items():
-            update_fields.append(field)
-            setattr(self.instance, field, value)
-        self.instance.save(update_fields=update_fields)
-        return self.instance
-
-
 ############################################################
 #                  PROFILES Вложенность                    #
 
@@ -74,7 +40,7 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super(ProfileListSerializer, self).to_representation(instance)
-        ret['phone'] = re.sub('\D', '', ret['phone'] or '')
+        ret['phone'] = re.sub(r'\D', '', ret['phone'] or '')
         return ret
 
 
@@ -118,10 +84,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'phone', 'address', 'hobby', 'password')
 
-    def to_representation(self, instance):
-        ret = super(UserCreateSerializer, self).to_representation(instance)
-        ret['phone'] = re.sub('\D', '', ret['phone'] or '')
-        return ret
+    # def to_representation(self, instance):
+    #     ret = super(UserCreateSerializer, self).to_representation(instance)
+    #     ret['phone'] = re.sub('\D', '', ret['phone'] or '')
+    #     return ret
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -134,6 +100,40 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'phone', 'address', 'hobby')
+
+
+#############################################
+#                  POSTS                    #
+
+class PostsModelSerializer(serializers.ModelSerializer):
+    """Для вывода всех постов и создания новых"""
+    user = UserListSerializer(read_only=True)
+    url = serializers.ReadOnlyField(source='get_absolute_url')
+
+    class Meta:
+        model = Post
+        fields = ('id', 'date', 'user', 'url', 'title', 'content', 'image')
+        read_only_fields = ('date',)
+
+
+class PostDetailModelSerializer(PostsModelSerializer):
+    """Для взаимодействия с уже существующими постами"""
+    title = serializers.CharField(required=False)
+    content = serializers.CharField(required=False)
+
+    class Meta:
+        model = Post
+        fields = ('id', 'date', 'user', 'url', 'title', 'content', 'image')
+        read_only_fields = ('date',)
+
+    def save(self, **kwargs):
+        validated_data = {**self.validated_data, **kwargs}
+        update_fields = []
+        for field, value in validated_data.items():
+            update_fields.append(field)
+            setattr(self.instance, field, value)
+        self.instance.save(update_fields=update_fields)
+        return self.instance
 
 
 ##########################################
