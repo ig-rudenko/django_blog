@@ -11,13 +11,30 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 
 from .forms import PostModelForm
-from .paginator import LargeTablePaginator
+from .paginator import LargeTablePaginator, CachedPaginator
 from .api.serializers import PostsModelSerializer
 from posts import models
 
 from rest_framework.decorators import api_view
 from rest_framework.views import Response
 from rest_framework import status
+
+from django.views.decorators.cache import cache_page
+from .tasks import add, sub, mul, div
+from celery.result import AsyncResult
+
+
+def task(request):
+    opt = request.GET.get('opt')
+    x = request.GET.get('x')
+    y = request.GET.get('y')
+    res = add(x, y)
+    return Response(res)
+
+
+def get_task(request, uuid: str):
+    res = AsyncResult(uuid)
+    return Response(f'{res}<br>{res.status}<br>{res.result}')
 
 
 def fake_create_user(request):
@@ -59,8 +76,11 @@ def profile(request, user_name):
         p = 1
 
     try:
+        print(user_name, models.Profile.objects.all())
         user_profile = models.Profile.objects.get(user__username=user_name)
+        print(user_profile)
         posts = models.Post.objects.filter(user__username=user_name).order_by('-date')
+        print(posts)
         pages = Paginator(posts, 100)
         return render(
             request,
@@ -88,11 +108,12 @@ def delete(request, post_id):
         return HttpResponseNotAllowed(request)
 
 
+@cache_page(60 * 10)
 def post(request, post_id):
     try:
         user_post = models.Post.objects.get(id=post_id)
         author = user_post.user.username
-
+        print(user_post.image)
         return render(request, 'posts/user_post.html', {'post': user_post, 'user': author})
     except models.Post.DoesNotExist:
         return HttpResponseNotFound(request)
@@ -102,6 +123,13 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = models.Post
     form_class = PostModelForm
     template_name = 'posts/create_2.html'
+
+    def form_valid(self, form):
+        r = super(PostCreateView, self).form_valid(form)
+        self.object.user = self.request.user
+        self.object.save()
+        print(self.object, self.object.user)
+        return r
 
 
 class PostUpdateView(UserPassesTestMixin, UpdateView):
@@ -129,7 +157,12 @@ class PostShowView(ListView):
     context_object_name = 'posts'
     ordering = ('-date',)
     page_kwarg = 'p'
-    paginator_class = LargeTablePaginator
+
+    def get_paginator(self, queryset, per_page, orphans=0, allow_empty_first_page=True, **kwargs):
+        # Имя для кеша
+        cache_name = f'{self.model.__name__}{self.request.GET.get("d", "")}{self.request.GET.get("s", "")}'
+        # Возвращаем paginator
+        return CachedPaginator(queryset, per_page, orphans, allow_empty_first_page, cache_name)
 
     def get_queryset(self):
         if self.request.GET.get('d'):

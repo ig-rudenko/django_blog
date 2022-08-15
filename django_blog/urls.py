@@ -16,13 +16,30 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from posts import views as posts_views
-import debug_toolbar
 
 from django.contrib.staticfiles.utils import settings
 from django.contrib.staticfiles.urls import static
+from django.views.generic import TemplateView
 
+from drf_yasg.views import get_schema_view  # new
+from drf_yasg import openapi  # new
+from rest_framework import permissions
 
 # MAIN
+
+schema_view = get_schema_view(  # new
+    openapi.Info(
+        title="Posts API",
+        default_version='v1',
+        description="Description",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@snippets.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    patterns=[path('api/', include('posts.api.urls'))],
+    public=True,
+    permission_classes=[permissions.IsAuthenticatedOrReadOnly],
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,7 +53,18 @@ urlpatterns = [
     # Авторизация
     path('accounts/', include('django.contrib.auth.urls')),
 
-    path('__debug__/', include(debug_toolbar.urls)),
-    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path('registration/', include('registration.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('__debug__/', include('debug_toolbar.urls')),
+    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path('captcha/', include('captcha.urls')),
+
+
+    # Документация API
+    path('swagger-ui/', TemplateView.as_view(template_name='swagger-ui.html',), name='swagger-ui'),
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

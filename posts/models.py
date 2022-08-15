@@ -72,7 +72,8 @@ class Log(models.Model):
         ]
 
 
-@receiver([post_save], sender=Post)
-def user_log(sender, instance: Post, created, **kwargs):
-    print('POST SAVE!', kwargs)
-    Log.objects.create(obj=str(instance)[:10], message=str(kwargs)[:300])
+@receiver([post_save], sender=User)
+def user_log(sender, instance: User, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+

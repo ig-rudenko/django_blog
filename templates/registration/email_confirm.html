@@ -1,0 +1,6 @@
+{% autoescape off %}
+    <p>Привет {{ user.username }}, нажмите ссылку ниже, чтобы подтвердить вашу регистрацию на сайте {{ domain }}</p>
+    <br>
+    <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">
+        http://{{ domain }}{% url 'activate' uidb64=uid token=token %}</a>
+{% endautoescape %}

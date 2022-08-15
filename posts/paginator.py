@@ -1,6 +1,32 @@
 from django.core.paginator import Paginator
 from django.db import connection
 from rest_framework.pagination import PageNumberPagination
+from django.core.cache import cache
+
+
+class CachedPaginator(Paginator):
+    def __init__(self, object_list, per_page, orphans=0, allow_empty_first_page=True, cache_name=None):
+        super().__init__(object_list, per_page, orphans, allow_empty_first_page)
+        self.cache_name = cache_name
+        self._count = None
+
+    @property
+    def count(self):
+        print(f'{self.cache_name=}')
+
+        if not self.cache_name:  # Если имя кеша не было передано, то работаем, как с обычным пагинатором
+            if not self._count:
+                self._count = super(CachedPaginator, self).count
+            return self._count
+
+        # Работа с кешем
+        c = cache.get(self.cache_name)  # Получаем из кеша запись
+        print('cache:', c)
+        if not c:  # Если в кеше нет записи
+            c = super(CachedPaginator, self).count
+            cache.set(self.cache_name, c)
+
+        return c
 
 
 class LargeTablePaginator(Paginator):
