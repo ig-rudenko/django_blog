@@ -6,6 +6,9 @@ from django.views.decorators.cache import cache_page
 # /posts/
 
 urlpatterns = [
+    path('task/', posts_views.task),
+    path('task/<uuid>', posts_views.get_task),
+
     path('', posts_views.PostShowView.as_view(), name='show_posts'),
 
     path('create', posts_views.PostCreateView.as_view(), name='create_post'),

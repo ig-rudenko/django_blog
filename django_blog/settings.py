@@ -329,3 +329,8 @@ CKEDITOR_CONFIGS = {
     }
 }
 ###
+
+# CELERY
+
+CELERY_BROKER_URL = 'amqp://127.0.0.1'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0/'

@@ -1,7 +1,7 @@
 import datetime
 from faker import Faker
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -28,13 +28,15 @@ def task(request):
     opt = request.GET.get('opt')
     x = request.GET.get('x')
     y = request.GET.get('y')
-    res = add(x, y)
-    return Response(res)
+    res = add.delay(x, y)
+    return HttpResponse(res)
 
 
 def get_task(request, uuid: str):
-    res = AsyncResult(uuid)
-    return Response(f'{res}<br>{res.status}<br>{res.result}')
+    result = AsyncResult(uuid)
+    s = f'{result}<br>{result.status}<br>{result.result}'
+    result.forget()
+    return HttpResponse(s)
 
 
 def fake_create_user(request):
