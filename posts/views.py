@@ -1,34 +1,60 @@
 import datetime
-from faker import Faker
 
-from django.shortcuts import render, redirect, HttpResponse
-from django.http import HttpResponseNotAllowed, HttpResponseNotFound
-from django.db.models import Q
-from django.contrib.auth.models import User
+from celery import group, chain, chord
+from celery.result import AsyncResult
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponseNotAllowed, HttpResponseNotFound
+from django.shortcuts import render, redirect, HttpResponse
+from django.views.decorators.cache import cache_page
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-
-from .forms import PostModelForm
-from .paginator import LargeTablePaginator, CachedPaginator
-from .api.serializers import PostsModelSerializer
-from posts import models
-
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.views import Response
-from rest_framework import status
 
-from django.views.decorators.cache import cache_page
-from .tasks import add, sub, mul, div
-from celery.result import AsyncResult
+from posts import models
+from .api.serializers import PostsModelSerializer
+from .forms import PostModelForm
+from .paginator import CachedPaginator
+from .tasks import add, factorial, ssum, xsum, fake_post, fake_user
 
 
 def task(request):
-    opt = request.GET.get('opt')
-    x = request.GET.get('x')
-    y = request.GET.get('y')
-    res = add.delay(x, y)
+    if request.GET.get('opt') == 'fact':
+        res = factorial.apply_async([request.GET.get('n')], {})
+
+    elif request.GET.get('opt') == 'ssum':
+        res = ssum.delay(request.GET.get('n'))
+
+    elif request.GET.get('opt') == 'gr':
+        n = int(request.GET.get('n'))
+
+        s = factorial.s(n)
+        print(s)
+
+        res = group(factorial.s(i) for i in range(n)).delay()
+
+    elif request.GET.get('opt') == 'ch':
+        n = int(request.GET.get('n'))  # 10
+
+        res = chain(
+            factorial.s(n), add.s(n), add.s(n+n)
+        ).delay()
+
+    elif request.GET.get('opt') == 'chord':
+        n = int(request.GET.get('n'))  # 10
+
+        res = chord(
+            [factorial.s(n), factorial.s(n+n)], xsum.s()
+        )()
+
+    else:
+        x = request.GET.get('x')
+        y = request.GET.get('y')
+        res = add.delay(x, y)
     return HttpResponse(res)
 
 
@@ -40,34 +66,15 @@ def get_task(request, uuid: str):
 
 
 def fake_create_user(request):
-    f = Faker('ru_RU')
-    for i in range(100):
-        print(i)
-        p = f.profile()
-        User.objects.create(
-            username=p['username'],
-            email=p['mail'],
-            password=f.password(length=8)
-        )
+    for _ in range(100):
+        fake_user.delay()
     return redirect('/')
 
 
 def fake_create_posts(request):
-    f = Faker('ru_RU')
-    users = User.objects.all()
-
-    for u in users:
-        models.Post.objects.bulk_create(
-            [
-                models.Post(
-                    title=f.sentence(nb_words=5),
-                    content=f.sentence(nb_words=100),
-                    date=f.date_time_between(),
-                    user=u
-                ) for _ in range(10000)
-            ]
-        )
-        print(u.username)
+    for u in User.objects.all():
+        for _ in range(1000):
+            fake_post.delay(u.id)
     return redirect('/')
 
 
@@ -127,10 +134,9 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     template_name = 'posts/create_2.html'
 
     def form_valid(self, form):
-        r = super(PostCreateView, self).form_valid(form)
+        r = super().form_valid(form)
         self.object.user = self.request.user
         self.object.save()
-        print(self.object, self.object.user)
         return r
 
 

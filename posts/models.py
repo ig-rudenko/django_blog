@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from faker import Faker
 from ckeditor.fields import RichTextField
 import os
 
@@ -52,9 +51,9 @@ class Post(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20, null=True)
-    address = models.CharField(max_length=100, null=True)
-    hobby = models.CharField(max_length=200, null=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    address = models.CharField(max_length=100, null=True, blank=True)
+    hobby = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         db_table = 'auth_user_profile'
@@ -76,4 +75,3 @@ class Log(models.Model):
 def user_log(sender, instance: User, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-

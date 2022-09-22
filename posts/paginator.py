@@ -12,7 +12,7 @@ class CachedPaginator(Paginator):
 
     @property
     def count(self):
-        print(f'{self.cache_name=}')
+        # print(f'{self.cache_name=}')
 
         if not self.cache_name:  # Если имя кеша не было передано, то работаем, как с обычным пагинатором
             if not self._count:
@@ -21,8 +21,8 @@ class CachedPaginator(Paginator):
 
         # Работа с кешем
         c = cache.get(self.cache_name)  # Получаем из кеша запись
-        print('cache:', c)
-        if not c:  # Если в кеше нет записи
+        # print('cache:', c)
+        if c is None:  # Если в кеше нет записи
             c = super(CachedPaginator, self).count
             cache.set(self.cache_name, c)
 

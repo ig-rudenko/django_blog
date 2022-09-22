@@ -3,11 +3,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.tokens import default_token_generator
 from .forms import SignupForm, ResetPassword
 from django.contrib.sites.shortcuts import get_current_site
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.models import User
-from django.core.mail import EmailMultiAlternatives
+
+from .tasks import send_email, delete_user
 
 
 def signup(request):
@@ -22,28 +22,11 @@ def signup(request):
             current_site = get_current_site(request)
             print(f'{current_site=}')
 
-            mail_subject = 'Ссылка на активацию аккаунта на сайте ' + current_site.domain
+            # Отправка письма
+            send_email.delay(current_site.domain, user.id, 'registration/email_confirm.html')
 
-            # Письмо пользователю (текст)
-            message = render_to_string(
-                'registration/email_confirm.html',
-                {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': default_token_generator.make_token(user),
-                }
-            )
-            print(f"{message=}")
-
-            to_email = form.cleaned_data['email']
-
-            email = EmailMultiAlternatives(
-                mail_subject, message, to=[to_email]
-            )
-
-            email.attach_alternative(message, "text/html")  # Тип данных - html
-            email.send()  # Отправка письма
+            # Удаление через 300 сек\
+            delete_user.apply_async(args=(user.id,), countdown=300)
 
             return HttpResponse('Пожалуйста, подтвердите вашу регистрацию. На указанную почту было выслано письмо. '
                                 'Проверьте папку (Спам), если не видите его во входящих.')
@@ -82,19 +65,10 @@ def reset_password(request):
             return render(request, 'registration/reset_password.html', {'error': 'Пользователь с таким email не существует!'})
 
         current_site = get_current_site(request)
-        mail_subject = 'Ссылка на сброс пароля на сайте ' + current_site.domain
-        message = render_to_string('registration/email_reset_password.html', {
-            'user': user,
-            'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': default_token_generator.make_token(user),
-        })
 
-        email = EmailMultiAlternatives(
-            mail_subject, message, to=[to_email]
-        )
-        email.attach_alternative(message, "text/html")
-        email.send()
+        # Письмо
+        send_email.delay(current_site.domain, user.id, 'registration/email_reset_password.html')
+
         return HttpResponse('Ссылка для сброса пароля была отправлена на указанную почту. '
                             'Проверьте папку (Спам), если не видите его во входящих')
 

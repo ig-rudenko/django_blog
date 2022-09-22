@@ -37,6 +37,11 @@ class PostsAdmin(admin.ModelAdmin):
         return mark_safe(f'<a href="/posts/{post.id}" target="_blank">Читать</a>')
 
 
+@admin.register(Profile)
+class ProfileUserAdmin(admin.ModelAdmin):
+    list_display = ['user', 'phone', 'address', 'hobby']
+
+
 admin.site.unregister(User)
 
 

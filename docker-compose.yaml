@@ -1,0 +1,119 @@
+version: "3"
+
+services:
+  db-migrations:
+    build: .
+    image: django:v1
+    env_file: django.env
+    command: python manage.py migrate
+    depends_on:
+      - db-balancer
+
+  django1: &django
+    build: .
+    image: django:v1
+    env_file: django.env
+    restart: always
+    command: gunicorn --access-logfile - --workers 5 --bind 0.0.0.0:8000 django_blog.wsgi:application
+    volumes:
+      - media:/app/media
+    depends_on:
+      - redis
+      - rabbitmq
+      - db-balancer
+      - db-migrations
+
+  django2:
+    <<: *django
+
+#  django-debug:
+#    <<: *django
+#    command: python manage.py runserver 0.0.0.0:8000
+#    environment:
+#      DEBUG: true
+#    profiles: ['debug']
+#    ports:
+#      - "8888:8000"
+#    depends_on:
+#      - redis
+#      - rabbitmq
+#      - db-balancer
+#      - django1
+
+  rabbitmq:
+    image: rabbitmq
+
+  redis:
+    image: redis
+    volumes:
+      - redis-data:/data
+
+  celery-worker1: &celery
+    <<: *django
+    command: celery -A django_blog worker -l INFO -c 2 -Q celery -n worker1
+    depends_on:
+      - rabbitmq
+      - redis
+
+#  celery-worker2:
+#    <<: *celery
+#    command: celery -A django_blog worker -l INFO -c 2 -Q celery -n worker2
+
+  celery-email:
+    <<: *celery
+    command: celery -A django_blog worker -l INFO -c 2 -Q email -n email
+
+  flower-celery:
+    <<: *celery
+    command: celery -A django_blog flower
+    ports:
+    - 55555:5555
+    depends_on:
+      - rabbitmq
+      - celery-email
+      - celery-worker1
+      - celery-worker2
+
+  postgres-main: &postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: django
+      POSTGRES_DB: posts_db
+    volumes:
+#    - ./settings/postgres/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+      - dbstorage:/var/lib/postgresql/data
+
+  postgres-replica:
+    <<: *postgres
+#    volumes:
+#      - ./settings/postgres/init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+    depends_on:
+      - postgres-main
+
+  http-balancer:
+    image: nginx
+    ports:
+    - 80:80
+    volumes:
+    - media:/var/www/media
+    - ./static:/var/www/static
+    - ./settings/nginx/http_balancer/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - django1
+      - django2
+
+  db-balancer:
+    image: nginx
+    volumes:
+    - ./settings/nginx/db_balancer/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - postgres-main
+      - postgres-replica
+
+
+volumes:
+  media:
+  redis-data:
+  dbstorage:

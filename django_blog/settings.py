@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
@@ -22,13 +22,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-d9kc0@j-pxs#dihgavxj^toq67xacz)-#c=3a7xi$790d2i3%u'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
 
-ALLOWED_HOSTS = ('127.0.0.1', '192.168.31.137')
-INTERNAL_IPS = ('127.0.0.1', '192.168.31.137')
+DEBUG = True if os.getenv('DEBUG') == 'true' else False
+
+
+ALLOWED_HOSTS = ['*']
+
+if DEBUG:
+    import socket
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
 
 
 # Application definition
@@ -93,12 +99,12 @@ WSGI_APPLICATION = 'django_blog.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'djangotest',
-        'USER': 'django',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': os.getenv('DATABASE_ENGINE'),
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': os.getenv('DATABASE_PORT'),
     }
 }
 
@@ -137,13 +143,14 @@ USE_THOUSAND_SEPARATOR = True
 USE_TZ = False
 
 
-EMAIL_USE_TLS = True
-EMAIL_PORT = 587
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'mail.irudenko@gmail.com'
-EMAIL_HOST_PASSWORD = 'yorhsvynfbrddomg'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-DEFAULT_FROM_EMAIL = 'mail.irudenko@gmail.com'
+EMAIL_USE_TLS = True if os.getenv('EMAIL_USE_TLS') == 'true' else False
+EMAIL_USE_SSL = True if os.getenv('EMAIL_USE_SSL') == 'true' else False
+EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
@@ -170,11 +177,11 @@ LOGOUT_REDIRECT_URL = '/'
 CACHES = {
     'default': {
         # 'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         # 'LOCATION': '127.0.0.1:11211',
-        # 'LOCATION': 'redis://127.0.0.1:6379',
-        'LOCATION': '/home/server0/djnago/cache',
+        'LOCATION': os.getenv('REDIS'),
+        # 'LOCATION': '/home/server0/djnago/cache',
     }
 }
 
@@ -189,7 +196,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # 'rest_framework.authentication.BasicAuthentication',
     ]
 }
 
@@ -237,30 +243,30 @@ SWAGGER_SETTINGS = {
     },
 }
 
+if DEBUG:
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+        'debug_toolbar.panels.profiling.ProfilingPanel',
+    ]
 
-DEBUG_TOOLBAR_PANELS = [
-    'debug_toolbar.panels.versions.VersionsPanel',
-    'debug_toolbar.panels.timer.TimerPanel',
-    'debug_toolbar.panels.settings.SettingsPanel',
-    'debug_toolbar.panels.headers.HeadersPanel',
-    'debug_toolbar.panels.request.RequestPanel',
-    'debug_toolbar.panels.sql.SQLPanel',
-    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-    'debug_toolbar.panels.templates.TemplatesPanel',
-    'debug_toolbar.panels.cache.CachePanel',
-    'debug_toolbar.panels.signals.SignalsPanel',
-    'debug_toolbar.panels.logging.LoggingPanel',
-    'debug_toolbar.panels.redirects.RedirectsPanel',
-    'debug_toolbar.panels.profiling.ProfilingPanel',
-]
-
-DEBUG_TOOLBAR_CONFIG = {
-    'INTERCEPT_REDIRECTS': False,
-}
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }
 ###
 
 
-# Редактор
+# --------------------- Редактор ------------------------
 CKEDITOR_UPLOAD_PATH = "media/"
 CKEDITOR_BASEPATH = "/static/ckeditor/ckeditor/"
 
@@ -330,7 +336,27 @@ CKEDITOR_CONFIGS = {
 }
 ###
 
-# CELERY
+# ---------------------- CELERY --------------------------
 
-CELERY_BROKER_URL = 'amqp://127.0.0.1'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0/'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+
+
+CELERY_TASK_ROUTES = {
+    'registration.tasks.send_email': {
+        'queue': 'email'
+    }
+}
+
+CELERY_TIMEZONE = TIME_ZONE
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'every-30-sec':
+        {
+            'task': 'registration.tasks.send_email',
+            'args': ('domain', 1, 'registration/email_confirm.html'),
+            'schedule': crontab(hour='*/30')
+        }
+}

@@ -1,0 +1,7 @@
+*
+!django_blog
+!posts
+!registration
+!templates
+!requirements.txt
+!manage.py
