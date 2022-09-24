@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from posts.models import Post, Profile
 from rest_framework import permissions
 from django.contrib.auth.hashers import make_password
@@ -16,6 +16,7 @@ __all__ = [
     'UserViewCreatePermission'
 ]
 
+User = get_user_model()
 
 ############################################################
 #                  PROFILES Вложенность                    #
@@ -39,7 +40,7 @@ class ProfileListSerializer(serializers.ModelSerializer):
         depth = 2
 
     def to_representation(self, instance):
-        ret = super(ProfileListSerializer, self).to_representation(instance)
+        ret = super().to_representation(instance)
         ret['phone'] = re.sub(r'\D', '', ret['phone'] or '')
         return ret
 
@@ -155,6 +156,6 @@ class UserViewCreatePermission(permissions.BasePermission):
         print(request, view)
         if request.method == 'GET':
             return request.user.is_staff or request.user.is_superuser
-        elif request.method == 'POST':
+        if request.method == 'POST':
             return request.user.is_anonymous or request.user.is_staff or request.user.is_superuser
-
+        return False

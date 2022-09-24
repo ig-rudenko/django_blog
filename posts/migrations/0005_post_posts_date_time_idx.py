@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddIndex(
+        AddIndexConcurrently(
             model_name='post',
             index=models.Index(fields=['date'], name='posts_date_time_idx'),
         ),

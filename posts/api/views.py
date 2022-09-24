@@ -1,6 +1,6 @@
 import datetime
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 
@@ -12,11 +12,13 @@ from rest_framework import status
 from posts.api.serializers import *
 from posts.paginator import LargeTablePaginatorAPI
 from posts import models
-from rest_framework.authentication import TokenAuthentication
+
+User = get_user_model()
 
 
 #################################################
 #                   PROFILES                    #
+
 
 class ProfileListCreateAPIView(generics.ListCreateAPIView):
     """Просмотр всех профилей пользователей и создание нового"""

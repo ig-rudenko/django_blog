@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
-from django.utils.translation import gettext_lazy as _
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +24,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = True if os.getenv('DEBUG') == 'true' else False
+DEBUG = os.getenv('DEBUG') == 'true'
 
 
 ALLOWED_HOSTS = ['*']
@@ -143,8 +141,8 @@ USE_THOUSAND_SEPARATOR = True
 USE_TZ = False
 
 
-EMAIL_USE_TLS = True if os.getenv('EMAIL_USE_TLS') == 'true' else False
-EMAIL_USE_SSL = True if os.getenv('EMAIL_USE_SSL') == 'true' else False
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'true'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'true'
 EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')

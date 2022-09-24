@@ -3,7 +3,7 @@ import datetime
 from celery import group, chain, chord
 from celery.result import AsyncResult
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponseNotAllowed, HttpResponseNotFound
@@ -11,15 +11,13 @@ from django.shortcuts import render, redirect, HttpResponse
 from django.views.decorators.cache import cache_page
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.views import Response
 
 from posts import models
-from .api.serializers import PostsModelSerializer
 from .forms import PostModelForm
 from .paginator import CachedPaginator
 from .tasks import add, factorial, ssum, xsum, fake_post, fake_user
+
+User = get_user_model()
 
 
 def task(request):
@@ -195,45 +193,3 @@ class PostShowView(ListView):
             q = models.Post.objects.filter(date_query).order_by('-date').all().values('id', 'title', 'user', 'date')
             print(q.query)
         return q
-
-
-@api_view(['GET', 'POST'])
-def posts_api(request):
-    print(request.user, request.data)
-    if request.method == 'GET':
-        posts = models.Post.objects.all()[:100]
-        serializer = PostsModelSerializer(posts, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST' and not request.user.is_anonymous:
-        serializer = PostsModelSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    else:
-        return Response({'detail': 'not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def posts_api_m(request, pk):
-    try:
-        post = models.Post.objects.get(id=pk)
-    except models.Post.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        s = PostsModelSerializer(post)
-        return Response(s.data)
-
-    elif request.method == 'PUT':
-        s = PostsModelSerializer(post, data=request.data)
-        if s.is_valid():
-            s.save()
-            return Response(s.data)
-        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    else:
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

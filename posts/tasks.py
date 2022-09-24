@@ -2,9 +2,11 @@ from django_blog.celery import app
 import time
 from functools import reduce
 from faker import Faker
-from django.contrib.auth.models import User
-from .models import Profile, Post
+from django.contrib.auth import get_user_model
+from .models import Post
 from django.contrib.auth.hashers import make_password
+
+User = get_user_model()
 
 
 @app.task(bind=True, autoretry_for=(ValueError,),

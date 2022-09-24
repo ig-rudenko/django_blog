@@ -16,14 +16,14 @@ class CachedPaginator(Paginator):
 
         if not self.cache_name:  # Если имя кеша не было передано, то работаем, как с обычным пагинатором
             if not self._count:
-                self._count = super(CachedPaginator, self).count
+                self._count = super().count
             return self._count
 
         # Работа с кешем
         c = cache.get(self.cache_name)  # Получаем из кеша запись
         # print('cache:', c)
         if c is None:  # Если в кеше нет записи
-            c = super(CachedPaginator, self).count
+            c = super().count
             cache.set(self.cache_name, c)
 
         return c
@@ -68,7 +68,7 @@ class LargeTablePaginator(Paginator):
                             'SELECT reltuples FROM pg_class WHERE relname = %s',
                             [self.object_list.query.model._meta.db_table])
                         estimate = int(cursor.fetchone()[0])
-                    except:
+                    except Exception:
                         pass
                 if estimate < self._limit:
                     # Записи не превысили лимит для точного поиска, запускаем его

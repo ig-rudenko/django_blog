@@ -1,3 +1,4 @@
+# pylint: skip-file
 """
 Django settings for django_blog project.
 
@@ -162,11 +163,11 @@ LOGOUT_REDIRECT_URL = '/'
 CACHES = {
     'default': {
         # 'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         # 'LOCATION': '127.0.0.1:11211',
-        # 'LOCATION': 'redis://127.0.0.1:6379',
-        'LOCATION': './cache',
+        'LOCATION': 'redis://127.0.0.1:6379',
+        # 'LOCATION': './cache',
     }
 }
 

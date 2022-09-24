@@ -5,9 +5,11 @@ from .forms import SignupForm, ResetPassword
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from .tasks import send_email, delete_user
+
+User = get_user_model()
 
 
 def signup(request):
@@ -46,8 +48,8 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         return HttpResponse('Спасибо, что подтвердили регистрацию, теперь вы можете зайти на сайт')
-    else:
-        return HttpResponse('Ссылка активации аккаунта неверна!')
+
+    return HttpResponse('Ссылка активации аккаунта неверна!')
 
 
 def reset_password(request):
@@ -87,11 +89,10 @@ def new_password(request, uidb64, token):
                 user.set_password(form.cleaned_data['password1'])
                 user.save()
                 return redirect('login')
-            else:
-                return render(request, 'registration/new_password.html', {'errors': form.errors})
-        else:
-            return render(request, 'registration/reset_password.html',
-                          {'error': 'Пользователь не найден!'})
+
+            return render(request, 'registration/new_password.html', {'errors': form.errors})
+
+        return render(request, 'registration/reset_password.html', {'error': 'Пользователь не найден!'})
 
     return render(request, 'registration/new_password.html')
 

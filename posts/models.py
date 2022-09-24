@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from django.urls import reverse
 from django.dispatch import receiver
@@ -8,6 +8,8 @@ from ckeditor.fields import RichTextField
 import os
 
 # Create your models here.
+
+User = get_user_model()
 
 
 class Post(models.Model):
@@ -44,7 +46,7 @@ class Post(models.Model):
         except Post.DoesNotExist:
             pass
 
-        return super(Post, self).save(
+        return super().save(
             force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields
         )
 
@@ -72,6 +74,6 @@ class Log(models.Model):
 
 
 @receiver([post_save], sender=User)
-def user_log(sender, instance: User, created, **kwargs):
+def user_log(_, instance: User, created):
     if created:
         Profile.objects.create(user=instance)

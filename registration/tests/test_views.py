@@ -1,6 +1,8 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
+
+User = get_user_model()
 
 
 class UserLoginTest(TestCase):
@@ -27,4 +29,3 @@ class UserLoginTest(TestCase):
         self.client.login(username='test_user', password='password')
         resp = self.client.get('/posts/create')
         self.assertEqual(resp.status_code, 200)
-

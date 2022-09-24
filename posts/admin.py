@@ -2,8 +2,10 @@ from django.contrib import admin
 from .models import Post, Profile, Log
 from django.utils.html import mark_safe
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .paginator import LargeTablePaginator
+
+User = get_user_model()
 
 
 @admin.register(Post)
@@ -21,8 +23,7 @@ class PostsAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         if len(request.GET) == 0:
             return Post.objects.none()
-        else:
-            return super().get_queryset(request)
+        return super().get_queryset(request)
 
     @admin.display(description='Номер телефона / Адрес')
     def user_info(self, post: Post):

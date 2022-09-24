@@ -2,8 +2,10 @@ import re
 
 from django.test import TestCase
 from registration.tasks import render_message
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core import mail
+
+User = get_user_model()
 
 
 class RenderMessageTest(TestCase):
