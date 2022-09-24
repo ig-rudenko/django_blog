@@ -31,7 +31,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --file Dockerfile --tag django_image
 
     - name: Run tests
-      run: docker run my-image-name:$(date +%s) python manage.py test --settings django_blog.settings_for_tests
+      run: docker run django_image python manage.py test --settings django_blog.settings_for_tests
