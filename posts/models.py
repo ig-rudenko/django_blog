@@ -74,6 +74,6 @@ class Log(models.Model):
 
 
 @receiver([post_save], sender=User)
-def user_log(_, instance: User, created):
+def user_log(_, instance: User, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
