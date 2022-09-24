@@ -9,7 +9,8 @@ from rest_framework import generics
 from rest_framework.views import Response
 from rest_framework import status
 
-from posts.api.serializers import *
+from posts.api.serializers import PostsModelSerializer, PostDetailModelSerializer, ProfileListSerializer, \
+    ProfileCreateSerializer, UserCreateSerializer, UserListSerializer, PostPermission, UserViewCreatePermission
 from posts.paginator import LargeTablePaginatorAPI
 from posts import models
 

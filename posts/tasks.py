@@ -11,7 +11,7 @@ User = get_user_model()
 
 @app.task(bind=True, autoretry_for=(ValueError,),
           retry_kwargs={'max_retries': 5, 'countdown': 5})
-def add(self, x, y):
+def add(self, x, y):  # pylint: disable=W0613
     time.sleep(2)
     return int(x) + int(y)
 

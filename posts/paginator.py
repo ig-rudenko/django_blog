@@ -6,12 +6,13 @@ from django.core.cache import cache
 
 class CachedPaginator(Paginator):
     def __init__(self, object_list, per_page, orphans=0, allow_empty_first_page=True, cache_name=None):
+        # pylint: disable=R0913
         super().__init__(object_list, per_page, orphans, allow_empty_first_page)
         self.cache_name = cache_name
         self._count = None
 
     @property
-    def count(self):
+    def count(self):  # pylint: disable=W0236
         # print(f'{self.cache_name=}')
 
         if not self.cache_name:  # Если имя кеша не было передано, то работаем, как с обычным пагинатором
@@ -56,7 +57,7 @@ class LargeTablePaginator(Paginator):
         return number
 
     @property
-    def count(self):
+    def count(self):  # pylint: disable=W0236
         """Если быстрый подсчет дал менее 10 000 записей, то возвращает общее количество объектов"""
         if self._count is None:
             try:
@@ -68,7 +69,7 @@ class LargeTablePaginator(Paginator):
                             'SELECT reltuples FROM pg_class WHERE relname = %s',
                             [self.object_list.query.model._meta.db_table])
                         estimate = int(cursor.fetchone()[0])
-                    except Exception:
+                    except Exception:  # pylint: disable=W0703
                         pass
                 if estimate < self._limit:
                     # Записи не превысили лимит для точного поиска, запускаем его
