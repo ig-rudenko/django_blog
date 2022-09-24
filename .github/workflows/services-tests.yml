@@ -34,4 +34,4 @@ jobs:
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
 
     - name: Run tests
-      run: docker-compose run test
+      run: docker run my-image-name:$(date +%s) python manage.py test --settings django_blog.settings_for_tests
