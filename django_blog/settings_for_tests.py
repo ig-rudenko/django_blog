@@ -162,7 +162,7 @@ CACHES = {
         # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         # 'LOCATION': '127.0.0.1:11211',
         # 'LOCATION': 'redis://127.0.0.1:6379',
-        'LOCATION': '/home/server0/djnago/cache',
+        'LOCATION': './cache',
     }
 }
 
