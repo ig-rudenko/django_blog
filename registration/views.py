@@ -52,8 +52,7 @@ def activate(request, uidb64, token):
     return HttpResponse('Ссылка активации аккаунта неверна!')
 
 
-def reset_password(request):
-    # pylint: disable=R1710
+def reset_password(request):  # pylint: disable=R1710
     if request.method == 'GET':
         return render(request, 'registration/reset_password.html')
 
