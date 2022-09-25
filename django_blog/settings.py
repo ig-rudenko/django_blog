@@ -11,10 +11,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
+from datetime import timedelta
+from celery.schedules import crontab
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -26,14 +28,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG') == 'true'
 
-
 ALLOWED_HOSTS = ['*']
 
 if DEBUG:
     import socket
     hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
     INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
-
 
 # Application definition
 
@@ -91,7 +91,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_blog.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -124,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -140,7 +138,6 @@ USE_THOUSAND_SEPARATOR = True
 
 USE_TZ = False
 
-
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'true'
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'true'
 EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
@@ -154,7 +151,6 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = '/static/'
-
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -179,10 +175,9 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         # 'LOCATION': '127.0.0.1:11211',
         'LOCATION': os.getenv('REDIS'),
-        # 'LOCATION': '/home/server0/djnago/cache',
+        # 'LOCATION': '/home/server0/django/cache',
     }
 }
-
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
@@ -197,8 +192,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-from datetime import timedelta
-
+# noinspection SpellCheckingInspection
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -315,7 +309,7 @@ CKEDITOR_CONFIGS = {
         # 'mathJaxLib': '//cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML',
         'tabSpaces': 4,
         'extraPlugins': ','.join([
-            'uploadimage', # the upload image feature
+            'uploadimage',  # the upload image feature
             # your extra plugins here
             'div',
             'autolink',
@@ -339,7 +333,6 @@ CKEDITOR_CONFIGS = {
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
 
-
 CELERY_TASK_ROUTES = {
     'registration.tasks.send_email': {
         'queue': 'email'
@@ -348,7 +341,6 @@ CELERY_TASK_ROUTES = {
 
 CELERY_TIMEZONE = TIME_ZONE
 
-from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = {
     'every-30-sec':
