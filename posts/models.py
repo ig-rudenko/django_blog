@@ -7,8 +7,6 @@ from django.db.models.signals import post_save
 from ckeditor.fields import RichTextField
 import os
 
-# Create your models here.
-
 User = get_user_model()
 
 
