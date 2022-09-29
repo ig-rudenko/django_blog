@@ -1,5 +1,4 @@
-version: "3"
-
+version: '3'
 services:
   db-migrations:
     build: .
@@ -55,9 +54,9 @@ services:
       - rabbitmq
       - redis
 
-#  celery-worker2:
-#    <<: *celery
-#    command: celery -A django_blog worker -l INFO -c 2 -Q celery -n worker2
+  celery-worker2:
+    <<: *celery
+    command: celery -A django_blog worker -l INFO -c 2 -Q celery -n worker2
 
   celery-email:
     <<: *celery
